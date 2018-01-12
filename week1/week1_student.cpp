@@ -58,6 +58,10 @@ float yaw=0;
 float pitch_angle=0;
 float roll_angle=0;
 
+// Added variables
+float roll_angle_acc = 0;
+float pitch_angle_acc = 0;
+
  
 int main (int argc, char *argv[])
 {
@@ -66,15 +70,16 @@ int main (int argc, char *argv[])
     calibrate_imu();
     
  
-    
+    printf("GX, GY, GZ, Acc_Roll, Acc_Pitch, Final_Roll, Final_Pitch\n");
     while(1)
     {
       read_imu();
-      //roll_angle = atan2(imu_data[4],imu_data[5])*180/M_PI -roll_calibration;
-      //pitch_angle = atan2(imu_data[3],imu_data[5])*180/M_PI - pitch_calibration;
+      roll_angle_acc = atan2(imu_data[4],imu_data[5])*180/M_PI -roll_calibration;
+      pitch_angle_acc = atan2(imu_data[3],imu_data[5])*180/M_PI - pitch_calibration;
            
       update_filter();   
-      printf("GX, %f, GY, %f, GZ, %f, Roll, %f, Pitch, %f \r\n",imu_data[0],imu_data[1],imu_data[2],roll_angle,pitch_angle); 
+      //      GX, GY, GZ, Acc_Roll, Acc_Pitch, Final_Roll, Final_Pitch
+      printf("%f, %f, %f, %f, %f, %f, %f \r\n",imu_data[0],imu_data[1],imu_data[2],roll_angle_acc,pitch_angle_acc,roll_angle,pitch_angle); 
      
     }
       
@@ -228,10 +233,10 @@ void update_filter()
 
   float confidence = 0.02;
 
-  float current_roll = atan2(imu_data[4],imu_data[5])*180/M_PI -roll_calibration; 
-  float current_pitch = atan2(imu_data[3],imu_data[5])*180/M_PI - pitch_calibration;
-  roll_angle = current_roll*confidence+(1.0-confidence)*(imu_data[0]*imu_diff+roll_angle); // roll_angle is global and x
-  pitch_angle = current_pitch*confidence+(1.0-confidence)*(imu_data[1]*imu_diff+pitch_angle); // pitch_angle is global and y
+  // we already calculated the roll from the accelerometer data, so we take the global roll and combine it with that, and update the global roll
+  
+  roll_angle = roll_angle_acc*confidence+(1.0-confidence)*(imu_data[0]*imu_diff+roll_angle); // roll_angle is global and x
+  pitch_angle = pitch_angle_acc*confidence+(1.0-confidence)*(imu_data[1]*imu_diff+pitch_angle); // pitch_angle is global and y
 
   
  
