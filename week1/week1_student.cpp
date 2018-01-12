@@ -82,7 +82,7 @@ int main (int argc, char *argv[])
       update_filter();   
       //      GX, GY, GZ, Acc_Roll, Acc_Pitch, Final_Roll, Final_Pitch
       //printf("%f, %f, %f, %f, %f, %f, %f \r\n",imu_data[0],imu_data[1],imu_data[2],roll_angle_acc,pitch_angle_acc,roll_angle,pitch_angle); 
-     printf("%f,%f,%f,%f,%f,%f \r\n", roll_angle,roll_angle_acc,roll_angle_gyro,pitch_angle,pitch_angle_acc,pitch_angle_gyro)
+     printf("%f,%f,%f,%f,%f,%f \r\n", roll_angle,roll_angle_acc,roll_angle_gyro,pitch_angle,pitch_angle_acc,pitch_angle_gyro);
     }
       
     
