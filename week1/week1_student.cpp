@@ -61,6 +61,8 @@ float roll_angle=0;
 // Added variables
 float roll_angle_acc = 0;
 float pitch_angle_acc = 0;
+float roll_angle_gyro = 0;
+float pitch_angle_gyro = 0;
 
  
 int main (int argc, char *argv[])
@@ -70,7 +72,7 @@ int main (int argc, char *argv[])
     calibrate_imu();
     
  
-    printf("GX, GY, GZ, Acc_Roll, Acc_Pitch, Final_Roll, Final_Pitch\n");
+    printf("Final_Roll, Acc_Roll, Gyro_roll, Final_Pitch, Acc_Pitch, Gyro_Ptich\n");
     while(1)
     {
       read_imu();
@@ -79,8 +81,8 @@ int main (int argc, char *argv[])
            
       update_filter();   
       //      GX, GY, GZ, Acc_Roll, Acc_Pitch, Final_Roll, Final_Pitch
-      printf("%f, %f, %f, %f, %f, %f, %f \r\n",imu_data[0],imu_data[1],imu_data[2],roll_angle_acc,pitch_angle_acc,roll_angle,pitch_angle); 
-     
+      //printf("%f, %f, %f, %f, %f, %f, %f \r\n",imu_data[0],imu_data[1],imu_data[2],roll_angle_acc,pitch_angle_acc,roll_angle,pitch_angle); 
+     printf("%f,%f,%f,%f,%f,%f \r\n", roll_angle,roll_angle_acc,roll_angle_gyro,pitch_angle,pitch_angle_acc,pitch_angle_gyro)
     }
       
     
@@ -237,7 +239,8 @@ void update_filter()
   
   roll_angle = roll_angle_acc*confidence+(1.0-confidence)*(imu_data[0]*imu_diff+roll_angle); // roll_angle is global and x
   pitch_angle = pitch_angle_acc*confidence+(1.0-confidence)*(imu_data[1]*imu_diff+pitch_angle); // pitch_angle is global and y
-
+  roll_angle_gyro = (imu_data[0]*imu_diff+roll_angle);
+  pitch_angle_gyro = (imu_data[1]*imu_diff+pitch_angle);
   
  
 
