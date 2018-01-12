@@ -70,11 +70,11 @@ int main (int argc, char *argv[])
     while(1)
     {
       read_imu();
-        float roll = atan2(imu_data[4],imu_data[5])*180/M_PI -roll_calibration;
-       float pitch = atan2(imu_data[3],imu_data[5])*180/M_PI - pitch_calibration;
-       printf("GX, %f, GY, %f, GZ, %f, Roll, %f, Pitch, %f \r\n",imu_data[0],imu_data[1],imu_data[2],roll,pitch);      
+      //roll_angle = atan2(imu_data[4],imu_data[5])*180/M_PI -roll_calibration;
+      //pitch_angle = atan2(imu_data[3],imu_data[5])*180/M_PI - pitch_calibration;
+           
       update_filter();   
-
+      printf("GX, %f, GY, %f, GZ, %f, Roll, %f, Pitch, %f \r\n",imu_data[0],imu_data[1],imu_data[2],roll_angle,pitch_angle); 
      
     }
       
@@ -224,8 +224,18 @@ void update_filter()
   //convert to seconds
   imu_diff=imu_diff/1000000000;
   time_prev=time_curr;
+ //comp. filter for roll, pitch here: 
+
+  float confidence = 0.02;
+
+  float current_roll = atan2(imu_data[4],imu_data[5])*180/M_PI -roll_calibration; 
+  float current_pitch = atan2(imu_data[3],imu_data[5])*180/M_PI - pitch_calibration;
+  roll_angle = current_roll*confidence+(1.0-confidence)*(imu_data[0]*imu_diff+roll_angle); // roll_angle is global and x
+  pitch_angle = current_pitch*confidence+(1.0-confidence)*(imu_data[1]*imu_diff+pitch_angle); // pitch_angle is global and y
+
   
-  //comp. filter for roll, pitch here: 
+ 
+
 }
 
 
