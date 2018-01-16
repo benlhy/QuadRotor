@@ -76,13 +76,17 @@ int main (int argc, char *argv[])
     while(1)
     {
       read_imu();
-      roll_angle_acc = atan2(imu_data[4],imu_data[5])*180/M_PI -roll_calibration;
-      pitch_angle_acc = atan2(imu_data[3],imu_data[5])*180/M_PI - pitch_calibration;
+      roll_angle_acc = atan2(imu_data[4],imu_data[5])*180/M_PI - roll_calibration;
+      pitch_angle_acc = atan2(-imu_data[3],imu_data[5])*180/M_PI - pitch_calibration;
            
       update_filter();   
       //      GX, GY, GZ, Acc_Roll, Acc_Pitch, Final_Roll, Final_Pitch
       //printf("%f, %f, %f, %f, %f, %f, %f \r\n",imu_data[0],imu_data[1],imu_data[2],roll_angle_acc,pitch_angle_acc,roll_angle,pitch_angle); 
-     printf("%f,%f,%f,%f,%f,%f \r\n", roll_angle,roll_angle_acc,roll_angle_gyro,pitch_angle,pitch_angle_acc,pitch_angle_gyro);
+     //printf("%f,%f,%f,%f,%f,%f \r\n", roll_angle,roll_angle_acc,roll_angle_gyro,pitch_angle,pitch_angle_acc,pitch_angle_gyro);
+     //printf("%f,%f \r\n", roll_angle_gyro,pitch_angle_gyro);
+     //printf("%f,%f \r\n", roll_angle_acc,pitch_angle_acc);
+     //printf("%f, %f,%f \r\n", roll_angle, roll_angle_gyro,roll_angle_acc);
+     printf("%f, %f,%f \r\n", pitch_angle, pitch_angle_gyro,pitch_angle_acc);
     }
       
     
@@ -104,7 +108,7 @@ void calibrate_imu()
     myaverage2 = myaverage2 + imu_data[1]; // our gyro y
     myaverage3 = myaverage3 + imu_data[2]; // our gyro y
     myaverage4 =myaverage4 +atan2(imu_data[4],imu_data[5]);
-    myaverage5=myaverage5 + atan2(imu_data[3],imu_data[5]);
+    myaverage5=myaverage5 + atan2(-imu_data[3],imu_data[5]);
     myaverage6 = myaverage6 + imu_data[5]; // our gyro z
     //printf("IMU values are %f",imu_data[0]);
   }
@@ -239,8 +243,8 @@ void update_filter()
   
   roll_angle = roll_angle_acc*confidence+(1.0-confidence)*(imu_data[0]*imu_diff+roll_angle); // roll_angle is global and x
   pitch_angle = pitch_angle_acc*confidence+(1.0-confidence)*(imu_data[1]*imu_diff+pitch_angle); // pitch_angle is global and y
-  roll_angle_gyro = (imu_data[0]*imu_diff+roll_angle_gyro);
-  pitch_angle_gyro = (imu_data[1]*imu_diff+pitch_angle_gyro);
+  roll_angle_gyro = imu_data[0]*imu_diff+roll_angle_gyro;
+  pitch_angle_gyro = imu_data[1]*imu_diff+pitch_angle_gyro;
   
  
 
