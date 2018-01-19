@@ -44,7 +44,7 @@ struct Keyboard {
 };
 Keyboard* shared_memory; 
 
-// top part function
+// Prototypes goes here
 int setup_imu();
 void setup_keyboard();
 void calibrate_imu();      
@@ -83,7 +83,7 @@ int last_version = 0;
 long last_time = 0;
 long curr_time= 0;
 
-struct timeval myte;
+struct timeval myte; // struct to store the time
 
 int main (int argc, char *argv[])
 {
@@ -99,15 +99,16 @@ int main (int argc, char *argv[])
  
     printf("Final_Roll, Acc_Roll, Gyro_roll, Final_Pitch, Acc_Pitch, Gyro_Ptich\n");
     gettimeofday(&myte,NULL);
-    last_time = myte.tv_sec*1000LL+myte.tv_usec/1000;
+    last_time = myte.tv_sec*1000LL+myte.tv_usec/1000; // first set the time to current time
     while(run_program==1)
     {
-      curr_time = myte.tv_sec*1000LL+myte.tv_usec/1000;
+      gettimeofday(&myte,NULL); // get time of day
+      curr_time = myte.tv_sec*1000LL+myte.tv_usec/1000; // update current time.
       if(curr_time>last_time+250){
-        run_program=0;
+        run_program=0; // kill.
       }
       Keyboard keyboard=*shared_memory;
-      read_keyboard(keyboard);
+      read_keyboard(keyboard); // this function only updates last time if it detects a heartbeat
       
       //printf("%d \r\n", keyboard.heartbeat); 
       read_imu();
@@ -131,17 +132,16 @@ int main (int argc, char *argv[])
 }
 
 void read_keyboard(Keyboard keyboard){
-  if (keyboard.heartbeat != last_seen){
+  if (keyboard.heartbeat != last_seen){ // if heartbeat is not equal to the last heartbeat, means that this is a new heartbeat
     if (keyboard.version != last_version){
       printf("key press:%c, keyboard heatbeat:%d keyboard version:%d \r\n",keyboard.key_press, keyboard.heartbeat, keyboard.version);
       last_seen=keyboard.heartbeat;
       last_version = keyboard.version; 
       
       }
-    last_time = curr_time;
+    last_time = curr_time; // update the time.
   }
     
-
 }
 
 
