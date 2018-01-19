@@ -106,15 +106,16 @@ int main (int argc, char *argv[])
       gettimeofday(&myte,NULL); // get time of day
       curr_time = myte.tv_sec*1000LL+myte.tv_usec/1000; // update current time.
 
-      // Once working, comment this if loop out.
+      //Once working, comment this if loop out.
       if(curr_time>last_time+250){
-        printf("Keyboard timeout");
+        printf("Keyboard timeout\r\n");
         run_program=0; // Shinu
         break;
       }
+
       Keyboard keyboard=*shared_memory;
       read_keyboard(keyboard); // this function only updates last time if it detects a heartbeat
-      
+
       //printf("%d \r\n", keyboard.heartbeat); 
       read_imu();
       roll_angle_acc = atan2(imu_data[4],-imu_data[5])*180/M_PI - roll_calibration;
@@ -123,7 +124,7 @@ int main (int argc, char *argv[])
       update_filter();   
       // //////////////////////MILESTONE TWO TO CHECK////////////////////////////
       
-      // safety_check();
+      safety_check();
 
       ///////////////////////////////////
       //      GX, GY, GZ, Acc_Roll, Acc_Pitch, Final_Roll, Final_Pitch
@@ -144,22 +145,25 @@ int main (int argc, char *argv[])
 
 void read_keyboard(Keyboard keyboard){
   if (keyboard.heartbeat != last_seen){ // if heartbeat is not equal to the last heartbeat, means that this is a new heartbeat
+
+    last_seen=keyboard.heartbeat;
+
     if (keyboard.version != last_version){
       printf("key press:%c, keyboard heatbeat:%d keyboard version:%d \r\n",keyboard.key_press, keyboard.heartbeat, keyboard.version);
-      last_seen=keyboard.heartbeat;
       last_version = keyboard.version; 
       
       //////////////////////// MILESTONE TO CHECK ////////////////////////////////
 
       if (keyboard.key_press==' '){ // CHECK if this is the right syntax to compare space
         run_program=0;
-        printf("Space pressed");
+        printf("Space pressed\r\n");
         // cannot break from here :(, only can set run_program=0
       }
 
       /////////////////////////////////////////////////////////////////////////
       
-      }
+    }
+
     last_time = curr_time; // update the time.
   }
     
@@ -192,12 +196,10 @@ void safety_check(){
     printf("Keyboard timeout");
     run_program=0; 
   }
-  if (keyboard.key_press==' '){ // CHECK if this is the right syntax to compare space
+  /*if (keyboard.key_press==' '){ // CHECK if this is the right syntax to compare space
     run_program=0;
     printf("Space pressed"); // Mojojojojo
-  }
-
-
+  }*/
 
 }
 
@@ -440,5 +442,3 @@ int setup_imu()
   }
   return 0;
 }
-
-
