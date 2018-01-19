@@ -52,6 +52,7 @@ void read_imu();
 void update_filter();
 void trap(int signal);
 void read_keyboard(Keyboard keyboard);
+void safety_check();
 
 //global variables
 int imu;
@@ -93,8 +94,8 @@ int main (int argc, char *argv[])
     calibrate_imu();
     //in main before while(1) loop add...
     setup_keyboard();
-    signal(SIGINT, &trap);
-    //to refresh values from shared memory first //
+    signal(SIGINT, &trap); // instant interrupt!
+    
 
  
     printf("Final_Roll, Acc_Roll, Gyro_roll, Final_Pitch, Acc_Pitch, Gyro_Ptich\n");
@@ -104,8 +105,12 @@ int main (int argc, char *argv[])
     {
       gettimeofday(&myte,NULL); // get time of day
       curr_time = myte.tv_sec*1000LL+myte.tv_usec/1000; // update current time.
+
+      // Once working, comment this if loop out.
       if(curr_time>last_time+250){
-        run_program=0; // kill.
+        printf("Keyboard timeout");
+        run_program=0; // Shinu
+        break;
       }
       Keyboard keyboard=*shared_memory;
       read_keyboard(keyboard); // this function only updates last time if it detects a heartbeat
@@ -116,6 +121,11 @@ int main (int argc, char *argv[])
       pitch_angle_acc = atan2(imu_data[3],-imu_data[5])*180/M_PI - pitch_calibration;
            
       update_filter();   
+      // //////////////////////MILESTONE TWO TO CHECK////////////////////////////
+      
+      // safety_check();
+
+      ///////////////////////////////////
       //      GX, GY, GZ, Acc_Roll, Acc_Pitch, Final_Roll, Final_Pitch
       //printf("%f, %f, %f, %f, %f, %f, %f \r\n",imu_data[0],imu_data[1],imu_data[2],roll_angle_acc,pitch_angle_acc,roll_angle,pitch_angle); 
      //printf("%f,%f,%f,%f,%f,%f \r\n", roll_angle,roll_angle_acc,roll_angle_gyro,pitch_angle,pitch_angle_acc,pitch_angle_gyro);
@@ -126,6 +136,7 @@ int main (int argc, char *argv[])
      //printf("%f, %f,%f \r\n", pitch_angle, imu_data[1],pitch_angle_acc);
     }
       
+     return 0;
     
    
   
@@ -138,6 +149,16 @@ void read_keyboard(Keyboard keyboard){
       last_seen=keyboard.heartbeat;
       last_version = keyboard.version; 
       
+      //////////////////////// MILESTONE TO CHECK ////////////////////////////////
+
+      if (keyboard.key_press==' '){ // CHECK if this is the right syntax to compare space
+        run_program=0;
+        printf("Space pressed");
+        // cannot break from here :(, only can set run_program=0
+      }
+
+      /////////////////////////////////////////////////////////////////////////
+      
       }
     last_time = curr_time; // update the time.
   }
@@ -145,10 +166,46 @@ void read_keyboard(Keyboard keyboard){
 }
 
 
+void safety_check(){
+  // CHECK convert to gs?
+  if (imu_data[3]>17.6 or imu_data[4]>17.6 or imu_data[5]>17.6){
+    printf("Impact!");
+    run_program=0; //shinu
+  }
+  if (imu_data[3]<2.45 and imu_data[4]<2.45 and imu_data[5]>2.45){
+    printf("Free fall!");
+    run_program=0; //shinu
+  }
+  if (roll_angle>45 or roll_angle<-45){
+    printf("Roll fail!");
+    run_program=0; // shinu
+  }
+  if (pitch_angle>45 or pitch_angle<-45){
+    printf("Pitch fail!");
+    run_program=0; // shinu
+  }
+  if (imu_data[0]>300 or imu_data[1]>300 or imu_data[2]>300){
+    printf("Spinning too fast!");
+    run_program=0; 
+  }
+  if(curr_time>last_time+250){
+    printf("Keyboard timeout");
+    run_program=0; 
+  }
+  if (keyboard.key_press==' '){ // CHECK if this is the right syntax to compare space
+    run_program=0;
+    printf("Space pressed"); // Mojojojojo
+  }
+
+
+
+}
+
+
 void trap(int signal)
 
 {
-   printf("ending program\n\r");
+   printf("Control-C pressed!\n\r");
    run_program=0;
 }
  
