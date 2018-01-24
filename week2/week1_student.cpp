@@ -107,11 +107,11 @@ int main (int argc, char *argv[])
       curr_time = myte.tv_sec*1000LL+myte.tv_usec/1000; // update current time.
 
       //Once working, comment this if loop out.
-      if(curr_time>last_time+250){
+      /*if(curr_time>last_time+250){
         printf("Keyboard timeout\r\n");
         run_program=0; // Shinu
         break;
-      }
+      }*/
 
       Keyboard keyboard=*shared_memory;
       read_keyboard(keyboard); // this function only updates last time if it detects a heartbeat
@@ -190,7 +190,7 @@ void safety_check(){
   }
   if (imu_data[0]>300 or imu_data[1]>300 or imu_data[2]>300){
     printf("Spinning too fast!");
-    run_program=0; 
+    run_program=0; //ksu
   }
   if(curr_time>last_time+250){
     printf("Keyboard timeout");
