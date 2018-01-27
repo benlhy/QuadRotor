@@ -92,21 +92,25 @@ float roll_angle_acc = 0;
 float pitch_angle_acc = 0;
 float roll_angle_gyro = 0;
 float pitch_angle_gyro = 0;
+
+// Flip pitch and roll
 float real_pitch_angle = 0;
 float real_roll_angle = 0;
-int pitch_integral_term = 0;
+
+// kill variables
 int last_seen = 0;
 int last_version = 0;
 long last_time = 0;
 long curr_time= 0;
 
+// pwm
 int pitch_integral_term = 0;
 int prev_error = 0;
 
-int pwm0 = 1000;
-int pwm1 = 1000;
-int pwm2 = 1000;
-int pwm3 = 1000;
+int pwm0 = 1100;
+int pwm1 = 1100;
+int pwm2 = 1100;
+int pwm3 = 1100;
 
 struct timeval myte; // struct to store the time
 
@@ -199,10 +203,10 @@ int main (int argc, char *argv[])
 }
 
 void pid_update(int desired_pitch){
-  // Propotional Control
-  int P = 10;
-  int D = 10;
-  int I = 0.05;
+  // PID control values
+  int Kp = 10;
+  int Kd = 10;
+  int Ki = 0.05;
   int neutral_power=1100;
   int pitch_error = 0;
   
@@ -226,11 +230,15 @@ void pid_update(int desired_pitch){
   }
 
   /////////////////////////////// MILESTONE ///////////////////////////////////
-  pwm0 = neutral_power + pitch_error*P// + pitch_d_error*D//+pitch_i_error*I;
-  pwm1 = neutral_power + pitch_error*P// + pitch_d_error*D//+pitch_i_error*I;
-  pwm2 = neutral_power - pitch_error*P// - pitch_d_error*D//-pitch_i_error*I;
-  pwm3 = neutral_power - pitch_error*P// - pitch_d_error*D//-pitch_i_error*I;
-////////////////////////////////////////////////////////////////////////////////
+  //////// Uncomment this line by line to reach each milestone ////////////////
+
+  pwm0 = neutral_power + pitch_error*Kp// + pitch_d_error*Kd//+pitch_i_error*Ki;
+  pwm1 = neutral_power + pitch_error*Kp// + pitch_d_error*Kd//+pitch_i_error*Ki;
+  pwm2 = neutral_power - pitch_error*Kp// - pitch_d_error*Kd//-pitch_i_error*Ki;
+  pwm3 = neutral_power - pitch_error*Kp// - pitch_d_error*Kd//-pitch_i_error*Ki;
+
+  //////////////////////////////////////////////////////////////////////////////
+
   // Limit speed
   pwm0=limit_speed(pwm0);
   pwm1=limit_speed(pwm1);
