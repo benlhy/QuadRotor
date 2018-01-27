@@ -100,6 +100,9 @@ int last_version = 0;
 long last_time = 0;
 long curr_time= 0;
 
+int pitch_integral_term = 0;
+int prev_error = 0;
+
 int pwm0 = 1000;
 int pwm1 = 1000;
 int pwm2 = 1000;
@@ -167,7 +170,9 @@ int main (int argc, char *argv[])
       
       safety_check();
 
-      pid_update(0,0); // set pitch angle and velocity
+      // This should be the only location that motor speed is varied. All other places should be zeroing the motor.
+
+      pid_update(0); // set desired pitch angle 
 
       
       //      GX, GY, GZ, Acc_Roll, Acc_Pitch, Final_Roll, Final_Pitch
@@ -193,43 +198,60 @@ int main (int argc, char *argv[])
   
 }
 
-void pid_update(int desired_pitch, int desired_pitch_velocity){
+void pid_update(int desired_pitch){
   // Propotional Control
   int P = 10;
   int D = 10;
   int I = 0.05;
   int neutral_power=1100;
   int pitch_error = 0;
-  int pitch_velocity_error = 0;
+  
 
-  desired_pitch=0;
-  desired_pitch_velocity=0;
+  
+  // Errors
+  pitch_error = desired_pitch - real_pitch_angle;
+  pitch_d_error = prev_error - pitch_error;
+  pitch_i_error = pitch_integral_term + pitch_error;
 
-  pitch_error=desired_pitch-real_pitch_angle;
-
-  pitch_velocity_error = desired_pitch_velocity - imu_data[1]; //imudata[1] was originally roll, but roll is pitch
+  //pitch_velocity_error = desired_pitch_velocity - imu_data[1]; //imudata[1] was originally roll, but roll is pitch
   //roll_velocity_error = desired_roll_velocity - imu_data[0];
-  pitch_integral_term = pitch_integral_term+I*pitch_error; // Integrating over time
+  //pitch_integral_term = pitch_integral_term+I*pitch_error; // Integrating over time
 
-  // Ensure that it doesn't get out of control.
-  if (pitch_integral_term<-50){
-    pitch_integral_term=50;
+  // Ensure that integral doesn't get out of control.
+  if (pitch_i_error<-50){
+    pitch_i_error=50;
   }
-  else if (pitch_integral_term>100){
-    pitch_integral_term = 100;
+  else if (pitch_i_error>100){
+    pitch_i_error = 100;
   }
 
   /////////////////////////////// MILESTONE ///////////////////////////////////
-  pwm0 = neutral_power + pitch_error*P// + pitch_velocity_error*D//+pitch_integral_term;
-  pwm1 = neutral_power + pitch_error*P// + pitch_velocity_error*D//+pitch_integral_term;
-  pwm2 = neutral_power - pitch_error*P// - pitch_velocity_error*D//-pitch_integral_term;
-  pwm3 = neutral_power - pitch_error*P// - pitch_velocity_error*D//-pitch_integral_term;
+  pwm0 = neutral_power + pitch_error*P// + pitch_d_error*D//+pitch_i_error*I;
+  pwm1 = neutral_power + pitch_error*P// + pitch_d_error*D//+pitch_i_error*I;
+  pwm2 = neutral_power - pitch_error*P// - pitch_d_error*D//-pitch_i_error*I;
+  pwm3 = neutral_power - pitch_error*P// - pitch_d_error*D//-pitch_i_error*I;
 ////////////////////////////////////////////////////////////////////////////////
+  // Limit speed
+  pwm0=limit_speed(pwm0);
+  pwm1=limit_speed(pwm1);
+  pwm2=limit_speed(pwm2);
+  pwm3=limit_speed(pwm3);
+
 
   set_PWM(0,pwm0); // might need to flip the signs for P
   set_PWM(1,pwm1);
   set_PWM(2,pwm2);
   set_PWM(3,pwm3);
+  prev_error = pitch_error;// update prev error
+}
+
+void limit_speed(int thepwm){
+  if (thepwm>PWM_MAX){
+    return PWM_MAX;
+  }
+  else{
+    return thepwm;
+  }
 }
 
 
