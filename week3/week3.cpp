@@ -94,6 +94,7 @@ float roll_angle_gyro = 0;
 float pitch_angle_gyro = 0;
 float real_pitch_angle = 0;
 float real_roll_angle = 0;
+int pitch_integral_term = 0;
 int last_seen = 0;
 int last_version = 0;
 long last_time = 0;
@@ -166,7 +167,7 @@ int main (int argc, char *argv[])
       
       safety_check();
 
-      pid_update();
+      pid_update(0,0); // set pitch angle and velocity
 
       
       //      GX, GY, GZ, Acc_Roll, Acc_Pitch, Final_Roll, Final_Pitch
@@ -196,9 +197,10 @@ void pid_update(int desired_pitch, int desired_pitch_velocity){
   // Propotional Control
   int P = 10;
   int D = 10;
+  int I = 0.05;
   int neutral_power=1100;
-  int pitch_error;
-  int pitch_velocity_error;
+  int pitch_error = 0;
+  int pitch_velocity_error = 0;
 
   desired_pitch=0;
   desired_pitch_velocity=0;
@@ -206,12 +208,23 @@ void pid_update(int desired_pitch, int desired_pitch_velocity){
   pitch_error=desired_pitch-real_pitch_angle;
 
   pitch_velocity_error = desired_pitch_velocity - imu_data[1]; //imudata[1] was originally roll, but roll is pitch
-  roll_velocity_error = desired_roll_velocity - imu_data[0];
+  //roll_velocity_error = desired_roll_velocity - imu_data[0];
+  pitch_integral_term = pitch_integral_term+I*pitch_error; // Integrating over time
 
-  pwm0 = neutral_power + pitch_error*P + pitch_velocity_error*D;
-  pwm1 = neutral_power + pitch_error*P + pitch_velocity_error*D;
-  pwm2 = neutral_power - pitch_error*P - pitch_velocity_error*D;
-  pwm3 = neutral_power - pitch_error*P - pitch_velocity_error*D;
+  // Ensure that it doesn't get out of control.
+  if (pitch_integral_term<-50){
+    pitch_integral_term=50;
+  }
+  else if (pitch_integral_term>100){
+    pitch_integral_term = 100;
+  }
+
+  /////////////////////////////// MILESTONE ///////////////////////////////////
+  pwm0 = neutral_power + pitch_error*P// + pitch_velocity_error*D//+pitch_integral_term;
+  pwm1 = neutral_power + pitch_error*P// + pitch_velocity_error*D//+pitch_integral_term;
+  pwm2 = neutral_power - pitch_error*P// - pitch_velocity_error*D//-pitch_integral_term;
+  pwm3 = neutral_power - pitch_error*P// - pitch_velocity_error*D//-pitch_integral_term;
+////////////////////////////////////////////////////////////////////////////////
 
   set_PWM(0,pwm0); // might need to flip the signs for P
   set_PWM(1,pwm1);
