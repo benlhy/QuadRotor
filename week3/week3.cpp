@@ -64,7 +64,8 @@ void safety_check();
 void init_pwm();
 void init_motor(uint8_t channel);
 void set_PWM( uint8_t channel, float time_on_us);
-void pid_update();
+void pid_update(int desired_pitch);
+int limit_speed(int thepwm);
 
 //global variables
 int imu;
@@ -102,6 +103,7 @@ int last_seen = 0;
 int last_version = 0;
 long last_time = 0;
 long curr_time= 0;
+long init_time=0;
 
 // pwm
 int pitch_integral_term = 0;
@@ -113,6 +115,10 @@ int pwm2 = 1100;
 int pwm3 = 1100;
 
 struct timeval myte; // struct to store the time
+
+// struct timeval graphTimerS;
+// struct timeval graphTimerE;
+// float graphTime;
 
 int main (int argc, char *argv[])
 {
@@ -142,13 +148,13 @@ int main (int argc, char *argv[])
     set_PWM(1,1100);//speed between 1000 and PWM_MAX, motor 0-3
     set_PWM(2,1100);//speed between 1000 and PWM_MAX, motor 0-3
     set_PWM(3,1100);//speed between 1000 and PWM_MAX, motor 0-3*/
-    
-
+    // getimeofday(&graphTimerS,NULL);
  
     //printf("Final_Roll, Acc_Roll, Gyro_roll, Final_Pitch, Acc_Pitch, Gyro_Ptich\n");
-    printf("PWM 0 , PWM 1, PWM 2, PWM 3, Current Pitch")
+    printf("PWM 0 , PWM 1, PWM 2, PWM 3, Current Pitch, Time\r\n");
     gettimeofday(&myte,NULL);
     last_time = myte.tv_sec*1000LL+myte.tv_usec/1000; // first set the time to current time
+    init_time = last_time;
     while(run_program==1)
     {
       gettimeofday(&myte,NULL); // get time of day
@@ -190,7 +196,10 @@ int main (int argc, char *argv[])
 
       //////////////////////MILESTONE TO CHECK/////////////////////////////////
 
-      printf("%d %d %d %d %f",pwm0,pwm1,pwm2,pwm3, real_pitch_angle);
+      // gettimeofday(&graphTimerE,NULL);
+      // graphTime=(graphTimerE*1000LL+graphTimerE/1000)-(graphTimerS*1000LL+graphTimerS/1000);
+
+      printf("%d %d %d %d %f %f\r\n",pwm0,pwm1,pwm2,pwm3, real_pitch_angle, (curr_time-init_time)/1000.0);
 
       ///////////////////////////////////////////////////////////////////////////
      
@@ -209,7 +218,7 @@ void pid_update(int desired_pitch){
   int Ki = 0.05;
   int neutral_power=1100;
   int pitch_error = 0;
-  
+  int pitch_d_error, pitch_i_error;
 
   
   // Errors
@@ -232,10 +241,10 @@ void pid_update(int desired_pitch){
   /////////////////////////////// MILESTONE ///////////////////////////////////
   //////// Uncomment this line by line to reach each milestone ////////////////
 
-  pwm0 = neutral_power + pitch_error*Kp// + pitch_d_error*Kd//+pitch_i_error*Ki;
-  pwm1 = neutral_power + pitch_error*Kp// + pitch_d_error*Kd//+pitch_i_error*Ki;
-  pwm2 = neutral_power - pitch_error*Kp// - pitch_d_error*Kd//-pitch_i_error*Ki;
-  pwm3 = neutral_power - pitch_error*Kp// - pitch_d_error*Kd//-pitch_i_error*Ki;
+  pwm0 = neutral_power - pitch_error*Kp + pitch_d_error*Kd//-pitch_i_error*Ki;
+  pwm1 = neutral_power - pitch_error*Kp + pitch_d_error*Kd//-pitch_i_error*Ki;
+  pwm2 = neutral_power + pitch_error*Kp - pitch_d_error*Kd//+pitch_i_error*Ki;
+  pwm3 = neutral_power + pitch_error*Kp - pitch_d_error*Kd//+pitch_i_error*Ki;
 
   //////////////////////////////////////////////////////////////////////////////
 
@@ -253,7 +262,7 @@ void pid_update(int desired_pitch){
   prev_error = pitch_error;// update prev error
 }
 
-void limit_speed(int thepwm){
+int limit_speed(int thepwm){
   if (thepwm>PWM_MAX){
     return PWM_MAX;
   }
@@ -530,8 +539,8 @@ void update_filter()
   roll_angle_gyro = imu_data[0]*imu_diff+roll_angle_gyro;
   pitch_angle_gyro = imu_data[1]*imu_diff+pitch_angle_gyro;
   // Fix pitch and roll
-  real_pitch_angle = roll_angle;
-  real_roll_angle = pitch_angle;
+  real_pitch_angle = -pitch_angle;
+  real_roll_angle = roll_angle;
   
  
 
