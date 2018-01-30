@@ -529,7 +529,8 @@ void update_filter()
   pitch_angle = pitch_angle_acc*confidence+(1.0-confidence)*(imu_data[1]*imu_diff+pitch_angle); // pitch_angle is global and y
   roll_angle_gyro = imu_data[0]*imu_diff+roll_angle_gyro;
   pitch_angle_gyro = imu_data[1]*imu_diff+pitch_angle_gyro;
-  // Fix pitch and roll
+
+  // I'm calling pitch roll and roll pitch. Wassup!
   real_pitch_angle = roll_angle;
   real_roll_angle = pitch_angle;
   
