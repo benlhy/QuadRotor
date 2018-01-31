@@ -213,7 +213,7 @@ int main (int argc, char *argv[])
 
 void pid_update(int desired_pitch){
   // PID control values
-  int Kp = 10;
+  int Kp = 5;
   int Kd = 10;
   int Ki = 0.05;
   int neutral_power=1100;
@@ -241,10 +241,10 @@ void pid_update(int desired_pitch){
   /////////////////////////////// MILESTONE ///////////////////////////////////
   //////// Uncomment this line by line to reach each milestone ////////////////
 
-  pwm0 = neutral_power - pitch_error*Kp + pitch_d_error*Kd//-pitch_i_error*Ki;
-  pwm1 = neutral_power - pitch_error*Kp + pitch_d_error*Kd//-pitch_i_error*Ki;
-  pwm2 = neutral_power + pitch_error*Kp - pitch_d_error*Kd//+pitch_i_error*Ki;
-  pwm3 = neutral_power + pitch_error*Kp - pitch_d_error*Kd//+pitch_i_error*Ki;
+  pwm0 = neutral_power - pitch_error*Kp;// - pitch_d_error*Kd//-pitch_i_error*Ki;
+  pwm1 = neutral_power + pitch_error*Kp;// + pitch_d_error*Kd//+pitch_i_error*Ki;
+  pwm2 = neutral_power - pitch_error*Kp;// - pitch_d_error*Kd//-pitch_i_error*Ki;
+  pwm3 = neutral_power + pitch_error*Kp;// + pitch_d_error*Kd//+pitch_i_error*Ki;
 
   //////////////////////////////////////////////////////////////////////////////
 
@@ -539,8 +539,8 @@ void update_filter()
   roll_angle_gyro = imu_data[0]*imu_diff+roll_angle_gyro;
   pitch_angle_gyro = imu_data[1]*imu_diff+pitch_angle_gyro;
   // Fix pitch and roll
-  real_pitch_angle = -pitch_angle;
-  real_roll_angle = roll_angle;
+  real_pitch_angle = roll_angle;
+  real_roll_angle = -pitch_angle;
   
  
 
