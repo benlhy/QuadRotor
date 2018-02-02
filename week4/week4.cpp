@@ -54,7 +54,7 @@ struct Keyboard {
   float yaw;
   float thrust;
 };
-
+/// This is the new struct for MILESTONE /////
 /*struct Keyboard {
   int keypress;
   float pitch;
@@ -63,6 +63,7 @@ struct Keyboard {
   float thrust;
   int version;
 };*/
+
 Keyboard* shared_memory; 
 
 // Prototypes goes here
@@ -77,10 +78,11 @@ void safety_check();
 void init_pwm();
 void init_motor(uint8_t channel);
 void set_PWM( uint8_t channel, float time_on_us);
-void pid_update(int desired_pitch);
+void pid_update(int desired_pitch, int desired_roll);
 int limit_speed(int thepwm);
 void get_update();
-void get_joystick(Keyboard keyboard);
+// MILESTONE for WEEK 4//
+//void get_joystick(Keyboard keyboard);
 
 //global variables
 int imu;
@@ -129,6 +131,9 @@ long init_time=0;
 // pwm
 int pitch_integral_term = 0;
 int prev_error = 0;
+int roll_integral_term = 0;
+int prev_d_error = 0;
+
 
 int pwm0 = 1100;
 int pwm1 = 1100;
@@ -148,13 +153,6 @@ int main (int argc, char *argv[])
     
 
     setup_imu();
-    
-    //in main function before calibrate imu add
-
-
-    //to set motor speed call 
-    
-
     calibrate_imu();
     //in main before while(1) loop add...
     setup_keyboard();
@@ -193,6 +191,7 @@ int main (int argc, char *argv[])
       }*/
 
       Keyboard keyboard=*shared_memory;
+
       read_keyboard(keyboard); // this function only updates last time if it detects a heartbeat
       //get_joystick(keyboard);   
       //printf("%d \r\n", keyboard.heartbeat); 
@@ -207,11 +206,13 @@ int main (int argc, char *argv[])
 
       // This should be the only location that motor speed is varied. All other places should be zeroing the motor.
 
-      pid_update(0); // set desired pitch angle 
+      pid_update(0,0); // set desired pitch angle 
 
 
-      ////////////// MILESTONE 2 CHECK //////////////////
+      ////////////// MILESTONE WEEK 4 CHECK //////////////////
       // pid_update(joy_pitch); // This is our desired pitch
+
+      /////////////// MILESTONE WEEK4 CHECK ////////////////////
       // pid_update(joy_pitch, joy_roll); // This is our desired roll;
 
       
@@ -224,12 +225,12 @@ int main (int argc, char *argv[])
      //printf("%f, %f,%f \r\n", roll_angle, imu_data[0], roll_angle_acc);
      //printf("%f, %f,%f \r\n", pitch_angle, imu_data[1],pitch_angle_acc);
 
-      //////////////////////MILESTONE TO CHECK/////////////////////////////////
+     
 
       // gettimeofday(&graphTimerE,NULL);
       // graphTime=(graphTimerE*1000LL+graphTimerE/1000)-(graphTimerS*1000LL+graphTimerS/1000);
 
-      printf("%d %d %d %d %f %f\r\n",pwm0,pwm1,pwm2,pwm3, real_pitch_angle, (curr_time-init_time)/1000.0);
+      printf("%d %d %d %d %f %f\r\n",pwm0,pwm1,pwm2,pwm3, real_pitch_angle, (curr_time-init_time)/1000.0); // Mojojojojo
 
       ///////////////////////////////////////////////////////////////////////////
      
@@ -241,20 +242,32 @@ int main (int argc, char *argv[])
   
 }
 
-void pid_update(int desired_pitch){
+void pid_update(int desired_pitch, int desired_roll){
   // PID control values
   int Kp = 15;
   int Kd = 5;
   int Ki = 0.5;
-  int neutral_power=1100;
+  int Kpr = 0;
+  int Kdr = 0;
+  int Kir = 0;
+  // int neutral_power=1100; // replaced with global thrust
   int pitch_error = 0;
+  int roll_error = 0;
   int pitch_d_error, pitch_i_error;
+  int roll_d_error,roll_i_error;
 
   
   // Errors
   pitch_error = desired_pitch - real_pitch_angle;
   pitch_d_error = prev_error - pitch_error;
   pitch_i_error = pitch_integral_term + pitch_error;
+  ///////////////////////////// MILESTONE for WEEK 4 /////////////////////////////
+
+  // calculate but do nothing with them at the moment.
+  roll_error = desired_roll - real_roll_angle;
+  roll_d_error = prev_d_error - roll_error;
+  roll_i_error = roll_integral_term + roll_error;
+  ///////////////////////////////////////////////////////////////////////////////
 
   //pitch_velocity_error = desired_pitch_velocity - imu_data[1]; //imudata[1] was originally roll, but roll is pitch
   //roll_velocity_error = desired_roll_velocity - imu_data[0];
@@ -267,15 +280,40 @@ void pid_update(int desired_pitch){
   else if (pitch_i_error>100){
     pitch_i_error = 100;
   }
+  /////////////////////// MILESTONE for WEEK 4 ///////////////////////////
+  
+  if (roll_i_error<-50){
+    pitch_i_error=-50;
+  }
+  else if (roll_i_error>100){
+    pitch_i_error = 100;
+  }
+  
+  /////////////////////////////////////////////////////////////////////
+
 
   /////////////////////////////// MILESTONE ///////////////////////////////////
   //////// Uncomment this line by line to reach each milestone ////////////////
 
-  pwm0 = quad_thrust + pitch_error*Kp + pitch_d_error*Kd;//-pitch_i_error*Ki;
-  pwm1 = quad_thrust - pitch_error*Kp - pitch_d_error*Kd;//+pitch_i_error*Ki;
-  pwm2 = quad_thrust + pitch_error*Kp + pitch_d_error*Kd;//-pitch_i_error*Ki;
-  pwm3 = quad_thrust - pitch_error*Kp - pitch_d_error*Kd;//+pitch_i_error*Ki;
+  pwm1 = quad_thrust + pitch_error*Kp + pitch_d_error*Kd;//-pitch_i_error*Ki;
+  pwm0 = quad_thrust - pitch_error*Kp - pitch_d_error*Kd;//+pitch_i_error*Ki;
+  pwm3 = quad_thrust + pitch_error*Kp + pitch_d_error*Kd;//-pitch_i_error*Ki;
+  pwm2 = quad_thrust - pitch_error*Kp - pitch_d_error*Kd;//+pitch_i_error*Ki;
 
+  //////////////////////////// MILESTONE WEEK 4 ////////////////////////////////
+  //  Might want to change the negative signs and positive signs in roll
+  //
+  // pwm1 = quad_thrust + pitch_error*Kp + pitch_d_error*Kd+pitch_i_error*Ki + roll_error*Kpr + roll_d_error*Kdr + roll_i_error*Kir;
+  // pwm0 = quad_thrust - pitch_error*Kp - pitch_d_error*Kd-pitch_i_error*Ki + roll_error*Kpr + roll_d_error*Kdr + roll_i_error*Kir;
+  // pwm3 = quad_thrust + pitch_error*Kp + pitch_d_error*Kd+pitch_i_error*Ki - roll_error*Kpr - roll_d_error*Kdr - roll_i_error*Kir;
+  // pwm2 = quad_thrust - pitch_error*Kp - pitch_d_error*Kd-pitch_i_error*Ki - roll_error*Kpr - roll_d_error*Kdr - roll_i_error*Kir;
+  //
+  //
+  //
+  //
+  //
+  //
+  //
   //////////////////////////////////////////////////////////////////////////////
 
   // Limit speed
@@ -289,7 +327,9 @@ void pid_update(int desired_pitch){
   set_PWM(1,pwm1);
   set_PWM(2,pwm2);
   set_PWM(3,pwm3);
+
   prev_error = pitch_error;// update prev error
+  prev_d_error = roll_error; // update prev error for roll
 }
 
 int limit_speed(int thepwm){
@@ -300,7 +340,7 @@ int limit_speed(int thepwm){
     return thepwm;
   }
 }
-
+////////////////////////////////////////////// WEEK 4 ////////////////////////////////////
 /*void get_joystick(Keyboard keyboard){
 
   if (keyboard.version != last_version){
@@ -404,7 +444,7 @@ void safety_check(){
 void trap(int signal)
 
 {
-     printf("here");
+    //printf("here");
     set_PWM(0,1000);//speed between 1000 and PWM_MAX, motor 0-3
     set_PWM(1,1000);//speed between 1000 and PWM_MAX, motor 0-3
     set_PWM(2,1000);//speed between 1000 and PWM_MAX, motor 0-3
