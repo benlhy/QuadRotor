@@ -54,7 +54,9 @@ struct Keyboard {
   float yaw;
   float thrust;
 };
+
 /// This is the new struct for MILESTONE /////
+
 /*struct Keyboard {
   int keypress;
   float pitch;
@@ -101,6 +103,9 @@ float pitch_angle=0;
 float roll_angle=0;
 int pwm; // don't initialise! Used by something else
 int quad_thrust = 1300; // neutral speed
+int quad_base_thrust = quad_thrust;
+
+
 
 float joy_pitch=0;
 float joy_roll=0;
@@ -206,7 +211,7 @@ int main (int argc, char *argv[])
 
       // This should be the only location that motor speed is varied. All other places should be zeroing the motor.
 
-      pid_update(0,0); // set desired pitch angle 
+      pid_update(0,0); // set desired pitch angle and roll angle
 
 
       ////////////// MILESTONE WEEK 4 CHECK //////////////////
@@ -235,7 +240,7 @@ int main (int argc, char *argv[])
       ///////////////////////////////////////////////////////////////////////////
      
     }
-    printf("here");
+    printf("Mojojojojo.");
 
       
    return 0;
@@ -349,11 +354,11 @@ int limit_speed(int thepwm){
       last_version = keyboard.version; 
 
       //MOJOJO TIME
-      joy_thrust = keyboard.thrust;
-      joy_yaw = keyboard.yaw;
-      joy_roll = keyboard.roll;
-      joy_pitch = keyboard.pitch;
-      quad_thrust=quad_thrust+joy_thrust;
+      joy_thrust = keyboard.thrust; // update thrust
+      joy_yaw = keyboard.yaw; // update yaw
+      joy_roll = keyboard.roll; //  update roll
+      joy_pitch = keyboard.pitch; // update pitch
+      quad_thrust= quad_base_thrust+joy_thrust; // update from base thrust.
 
       
       //////////////////////// MILESTONE TO CHECK ////////////////////////////////
