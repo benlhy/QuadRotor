@@ -22,7 +22,7 @@
 #define PWR_MGMT_1       0x6B // Device defaults to the SLEEP mode
 #define PWR_MGMT_2       0x6C
 
-#define PWM_MAX 1550
+#define PWM_MAX 1300
 #define frequency 25000000.0
 #define LED0 0x6			
 #define LED0_ON_L 0x6		
@@ -44,7 +44,7 @@ enum Gscale {
   GFS_1000DPS,
   GFS_2000DPS
 };
-
+/*
 struct Keyboard {
   char key_press;
   int heartbeat;
@@ -53,18 +53,18 @@ struct Keyboard {
   float roll;
   float yaw;
   float thrust;
-};
+};*/
 
 /// This is the new struct for MILESTONE /////
 
-/*struct Keyboard {
+struct Keyboard {
   int keypress;
   float pitch;
   float roll;
   float yaw;
   float thrust;
   int version;
-};*/
+};
 
 Keyboard* shared_memory; 
 
@@ -75,7 +75,7 @@ void calibrate_imu();
 void read_imu();    
 void update_filter();
 void trap(int signal);
-void read_keyboard(Keyboard keyboard);
+//void read_keyboard(Keyboard keyboard);
 void safety_check();
 void init_pwm();
 void init_motor(uint8_t channel);
@@ -84,7 +84,7 @@ void pid_update(int desired_pitch, int desired_roll);
 int limit_speed(int thepwm);
 void get_update();
 // MILESTONE for WEEK 4//
-//void get_joystick(Keyboard keyboard);
+void get_joystick(Keyboard keyboard);
 
 //global variables
 int imu;
@@ -102,7 +102,7 @@ float yaw=0;
 float pitch_angle=0;
 float roll_angle=0;
 int pwm; // don't initialise! Used by something else
-int quad_thrust = 1300; // neutral speed
+int quad_thrust = 1200; // neutral speed
 int quad_base_thrust = quad_thrust;
 
 
@@ -170,10 +170,10 @@ int main (int argc, char *argv[])
     init_motor(3);
     delay(1000);
     
-    set_PWM(0,1100);//speed between 1000 and PWM_MAX, motor 0-3 
-    set_PWM(1,1100);//speed between 1000 and PWM_MAX, motor 0-3
-    set_PWM(2,1100);//speed between 1000 and PWM_MAX, motor 0-3
-    set_PWM(3,1100);//speed between 1000 and PWM_MAX, motor 0-3*/
+    set_PWM(0,1000);//speed between 1000 and PWM_MAX, motor 0-3 
+    set_PWM(1,1000);//speed between 1000 and PWM_MAX, motor 0-3
+    set_PWM(2,1000);//speed between 1000 and PWM_MAX, motor 0-3
+    set_PWM(3,1000);//speed between 1000 and PWM_MAX, motor 0-3*/
     // getimeofday(&graphTimerS,NULL);
  
     //printf("Final_Roll, Acc_Roll, Gyro_roll, Final_Pitch, Acc_Pitch, Gyro_Ptich\n");
@@ -197,8 +197,8 @@ int main (int argc, char *argv[])
 
       Keyboard keyboard=*shared_memory;
 
-      read_keyboard(keyboard); // this function only updates last time if it detects a heartbeat
-      //get_joystick(keyboard);   
+      //read_keyboard(keyboard); // this function only updates last time if it detects a heartbeat
+      get_joystick(keyboard);   
       //printf("%d \r\n", keyboard.heartbeat); 
       read_imu();
       roll_angle_acc = atan2(imu_data[4],-imu_data[5])*180/M_PI - roll_calibration;
@@ -249,9 +249,9 @@ int main (int argc, char *argv[])
 
 void pid_update(int desired_pitch, int desired_roll){
   // PID control values
-  int Kp = 15;
-  int Kd = 5;
-  int Ki = 0.5;
+  float Kp = 10;
+  float Kd = 150;
+  float Ki = 0.05;
   int Kpr = 0;
   int Kdr = 0;
   int Kir = 0;
@@ -300,10 +300,10 @@ void pid_update(int desired_pitch, int desired_roll){
   /////////////////////////////// MILESTONE ///////////////////////////////////
   //////// Uncomment this line by line to reach each milestone ////////////////
 
-  pwm1 = quad_thrust + pitch_error*Kp + pitch_d_error*Kd;//-pitch_i_error*Ki;
-  pwm0 = quad_thrust - pitch_error*Kp - pitch_d_error*Kd;//+pitch_i_error*Ki;
-  pwm3 = quad_thrust + pitch_error*Kp + pitch_d_error*Kd;//-pitch_i_error*Ki;
-  pwm2 = quad_thrust - pitch_error*Kp - pitch_d_error*Kd;//+pitch_i_error*Ki;
+  pwm0 = quad_thrust + pitch_error*Kp + pitch_d_error*Kd + pitch_i_error*Ki;
+  pwm1 = quad_thrust - pitch_error*Kp - pitch_d_error*Kd - pitch_i_error*Ki;
+  pwm2 = quad_thrust + pitch_error*Kp + pitch_d_error*Kd + pitch_i_error*Ki;
+  pwm3 = quad_thrust - pitch_error*Kp - pitch_d_error*Kd - pitch_i_error*Ki;
 
   //////////////////////////// MILESTONE WEEK 4 ////////////////////////////////
   //  Might want to change the negative signs and positive signs in roll
@@ -341,16 +341,19 @@ int limit_speed(int thepwm){
   if (thepwm>PWM_MAX){
     return PWM_MAX;
   }
+  if (thepwm<1000){
+    return 1000;
+  }
   else{
     return thepwm;
   }
 }
 ////////////////////////////////////////////// WEEK 4 ////////////////////////////////////
-/*void get_joystick(Keyboard keyboard){
+void get_joystick(Keyboard keyboard){
 
-  if (keyboard.version != last_version){
+  //if (keyboard.version != last_version){
       // if not last version, update all values!!!!!!! 
-      printf("key press:%c, keyboard heatbeat:%d keyboard version:%d \r\n",keyboard.keypress, keyboard.version);
+      //printf("key press:%c, keyboard heatbeat:%d keyboard version:%d \r\n",keyboard.keypress, keyboard.version);
       last_version = keyboard.version; 
 
       //MOJOJO TIME
@@ -371,10 +374,11 @@ int limit_speed(int thepwm){
 
       /////////////////////////////////////////////////////////////////////////
       
-    }
+    //}
 
-}*/
+}
 
+/*
 void read_keyboard(Keyboard keyboard){
   if (keyboard.heartbeat != last_seen){ // if heartbeat is not equal to the last heartbeat, means that this is a new heartbeat
 
@@ -399,7 +403,7 @@ void read_keyboard(Keyboard keyboard){
     last_time = curr_time; // update the time.
   }
     
-}
+}*/
 
 
 void safety_check(){
@@ -407,19 +411,19 @@ void safety_check(){
   int stay_on = 1;
   if (imu_data[3]>17.6 or imu_data[4]>17.6 or imu_data[5]>17.6){
     printf("Impact!");
-    stay_on = 0; //shinu
+    //stay_on = 0; //shinu
   }
   if (imu_data[3]<2.45 and imu_data[4]<2.45 and imu_data[5]>2.45){
     printf("Free fall!");
-    stay_on = 0; //shinu
+    //stay_on = 0; //shinu
   }
   if (roll_angle>45 or roll_angle<-45){
     printf("Roll fail!");
-    stay_on = 0; // shinu
+    //stay_on = 0; // shinu
   }
   if (pitch_angle>45 or pitch_angle<-45){
     printf("Pitch fail!");
-    stay_on = 0; // shinu
+    //stay_on = 0; // shinu
   }
   if (imu_data[0]>300 or imu_data[1]>300 or imu_data[2]>300){
     printf("Spinning too fast!");
