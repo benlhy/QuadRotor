@@ -249,29 +249,35 @@ int main (int argc, char *argv[])
 
 void pid_update(int desired_pitch, int desired_roll){
   // PID control values
-  float Kp = 10;
-  float Kd = 150;
-  float Ki = 0.05;
-  int Kpr = 0;
-  int Kdr = 0;
-  int Kir = 0;
+  float Kp = 4;
+  float Kd = 100;
+  float Ki = 0.01;
+  float Kpr = 8;
+  float Kdr = 200;
+  float Kir = 0.02;
   // int neutral_power=1100; // replaced with global thrust
-  int pitch_error = 0;
-  int roll_error = 0;
-  int pitch_d_error, pitch_i_error;
-  int roll_d_error,roll_i_error;
+  float pitch_error = 0;
+  float roll_error = 0;
+  float pitch_d_error, pitch_i_error;
+  float roll_d_error,roll_i_error;
 
   
   // Errors
   pitch_error = desired_pitch - real_pitch_angle;
   pitch_d_error = prev_error - pitch_error;
-  pitch_i_error = pitch_integral_term + pitch_error;
+  //printf("D_error: %f",pitch_d_error);
+  pitch_integral_term = pitch_integral_term + pitch_error;
+  pitch_i_error = pitch_integral_term;
+  //printf("pitch: %f pitch error: %f pitch_i_error:%f \r\n",real_pitch_angle, pitch_error,pitch_i_error);
+  
   ///////////////////////////// MILESTONE for WEEK 4 /////////////////////////////
 
   // calculate but do nothing with them at the moment.
   roll_error = desired_roll - real_roll_angle;
   roll_d_error = prev_d_error - roll_error;
-  roll_i_error = roll_integral_term + roll_error;
+  roll_integral_term = roll_integral_term + roll_error;
+  roll_i_error = roll_integral_term;
+  //printf("roll: %f roll error: %f roll d error: %f roll_i_error: %f \r\n",real_roll_angle,roll_error, roll_d_error, roll_i_error);
   ///////////////////////////////////////////////////////////////////////////////
 
   //pitch_velocity_error = desired_pitch_velocity - imu_data[1]; //imudata[1] was originally roll, but roll is pitch
@@ -279,19 +285,19 @@ void pid_update(int desired_pitch, int desired_roll){
   //pitch_integral_term = pitch_integral_term+I*pitch_error; // Integrating over time
 
   // Ensure that integral doesn't get out of control.
-  if (pitch_i_error<-50){
-    pitch_i_error=-50;
+  if (pitch_i_error*Ki<-50){
+    pitch_i_error=-50/Ki;
   }
-  else if (pitch_i_error>100){
-    pitch_i_error = 100;
+  else if (pitch_i_error*Ki>100){
+    pitch_i_error = 100/Ki;
   }
   /////////////////////// MILESTONE for WEEK 4 ///////////////////////////
   
-  if (roll_i_error<-50){
-    pitch_i_error=-50;
+  if (roll_i_error*Kir<-50){
+    pitch_i_error=-50/Kir;
   }
-  else if (roll_i_error>100){
-    pitch_i_error = 100;
+  else if (roll_i_error*Kir>100){
+    pitch_i_error = 100/Kir;
   }
   
   /////////////////////////////////////////////////////////////////////
@@ -300,10 +306,15 @@ void pid_update(int desired_pitch, int desired_roll){
   /////////////////////////////// MILESTONE ///////////////////////////////////
   //////// Uncomment this line by line to reach each milestone ////////////////
 
-  pwm0 = quad_thrust + pitch_error*Kp + pitch_d_error*Kd + pitch_i_error*Ki;
-  pwm1 = quad_thrust - pitch_error*Kp - pitch_d_error*Kd - pitch_i_error*Ki;
-  pwm2 = quad_thrust + pitch_error*Kp + pitch_d_error*Kd + pitch_i_error*Ki;
-  pwm3 = quad_thrust - pitch_error*Kp - pitch_d_error*Kd - pitch_i_error*Ki;
+  //pwm0 = quad_thrust + pitch_error*Kp - pitch_d_error*Kd + pitch_i_error*Ki;
+  //pwm1 = quad_thrust - pitch_error*Kp + pitch_d_error*Kd - pitch_i_error*Ki;
+  //pwm2 = quad_thrust + pitch_error*Kp - pitch_d_error*Kd + pitch_i_error*Ki;
+  //pwm3 = quad_thrust - pitch_error*Kp + pitch_d_error*Kd - pitch_i_error*Ki;
+  //printf("P: %f, D: %f, I: %f",pitch_error*Kp,pitch_d_error*Kd,pitch_i_error*Ki);
+  pwm2 = quad_thrust + roll_error*Kpr - roll_d_error*Kdr + roll_i_error*Kir;
+  pwm3 = quad_thrust + roll_error*Kpr - roll_d_error*Kdr + roll_i_error*Kir;
+  pwm1 = quad_thrust - roll_error*Kpr + roll_d_error*Kdr - roll_i_error*Kir;
+  pwm0 = quad_thrust - roll_error*Kpr + roll_d_error*Kdr - roll_i_error*Kir;
 
   //////////////////////////// MILESTONE WEEK 4 ////////////////////////////////
   //  Might want to change the negative signs and positive signs in roll
@@ -341,8 +352,8 @@ int limit_speed(int thepwm){
   if (thepwm>PWM_MAX){
     return PWM_MAX;
   }
-  if (thepwm<1000){
-    return 1000;
+  if (thepwm<1100){
+    return 1100;
   }
   else{
     return thepwm;
