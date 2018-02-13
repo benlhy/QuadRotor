@@ -348,20 +348,34 @@ int limit_speed(int thepwm){
     return thepwm;
   }
 }
-////////////////////////////////////////////// WEEK 4 ////////////////////////////////////
 void get_joystick(Keyboard keyboard){
 
-  //if (keyboard.version != last_version){
+  if (keyboard.version != last_version){
       // if not last version, update all values!!!!!!! 
       //printf("key press:%c, keyboard heatbeat:%d keyboard version:%d \r\n",keyboard.keypress, keyboard.version);
+      //printf("key press:%d keyboard version:%ld \r\n", keyboard.version);
+      if (keyboard.keypress =='\"'){
+        printf("X pressed! "); // do unpause
+      }
+      else if (keyboard.keypress == '!'){
+        printf("B pressed! "); // do pause
+      }
+      else if(keyboard.keypress == '#' ){
+        printf("Y pressed! "); // do calibration
+      }
+
+
       last_version = keyboard.version; 
 
       //MOJOJO TIME
-      joy_thrust = keyboard.thrust; // update thrust
-      joy_yaw = keyboard.yaw; // update yaw
-      joy_roll = keyboard.roll; //  update roll
-      joy_pitch = keyboard.pitch; // update pitch
-      quad_thrust= quad_base_thrust+joy_thrust; // update from base thrust.
+      joy_thrust = keyboard.thrust; // update thrust // up is 16
+      joy_yaw = keyboard.yaw; // update yaw // right is high
+      joy_roll = keyboard.roll; //  update roll // right is high
+      joy_pitch = keyboard.pitch; // update pitch // up is 16
+      //printf("Thrust: %f, Yaw: %f, Roll,: %f, Pitch: %f",joy_thrust,joy_roll,joy_roll,joy_pitch);
+      quad_thrust= quad_base_thrust+ (int)joy_thrust; // update from base thrust.
+      printf("Quad_thrust: %d",quad_thrust);
+
 
       
       //////////////////////// MILESTONE TO CHECK ////////////////////////////////
@@ -374,9 +388,10 @@ void get_joystick(Keyboard keyboard){
 
       /////////////////////////////////////////////////////////////////////////
       
-    //}
+    }
 
 }
+
 
 /*
 void read_keyboard(Keyboard keyboard){
