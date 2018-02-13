@@ -369,13 +369,13 @@ void get_joystick(Keyboard keyboard){
       last_version = keyboard.version; 
 
       //MOJOJO TIME
-      joy_thrust = keyboard.thrust; // update thrust // up is 16
+      joy_thrust = 20.0*(keyboard.thrust-128)/128; // update thrust // up is 16
       joy_yaw = keyboard.yaw; // update yaw // right is high
       joy_roll = keyboard.roll; //  update roll // right is high
-      joy_pitch = keyboard.pitch; // update pitch // up is 16
+      joy_pitch = 20.0*(keyboard.pitch-128)/128; // update pitch // up is 16 // range +20/-20
       //printf("Thrust: %f, Yaw: %f, Roll,: %f, Pitch: %f",joy_thrust,joy_roll,joy_roll,joy_pitch);
       quad_thrust= quad_base_thrust+ (int)joy_thrust; // update from base thrust.
-      printf("Quad_thrust: %d",quad_thrust);
+      printf("Quad_thrust: %d Desired_pitch: %f",quad_thrust,joy_pitch;
 
 
       
