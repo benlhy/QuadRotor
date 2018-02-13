@@ -22,7 +22,7 @@
 #define PWR_MGMT_1       0x6B // Device defaults to the SLEEP mode
 #define PWR_MGMT_2       0x6C
 
-#define PWM_MAX 1000
+#define PWM_MAX 1900
 #define frequency 25000000.0
 #define LED0 0x6			
 #define LED0_ON_L 0x6		
@@ -102,7 +102,7 @@ float yaw=0;
 float pitch_angle=0;
 float roll_angle=0;
 int pwm; // don't initialise! Used by something else
-int quad_thrust = 1200; // neutral speed
+int quad_thrust = 1500; // neutral speed
 int quad_base_thrust = quad_thrust;
 
 
@@ -211,7 +211,7 @@ int main (int argc, char *argv[])
 
       // This should be the only location that motor speed is varied. All other places should be zeroing the motor.
 
-      pid_update(0,0); // set desired pitch angle and roll angle
+      pid_update(joy_pitch,0); // set desired pitch angle and roll angle
 
 
       ////////////// MILESTONE WEEK 4 CHECK //////////////////
@@ -235,7 +235,7 @@ int main (int argc, char *argv[])
       // gettimeofday(&graphTimerE,NULL);
       // graphTime=(graphTimerE*1000LL+graphTimerE/1000)-(graphTimerS*1000LL+graphTimerS/1000);
 
-      // printf("%d %d %d %d %f %f\r\n",pwm0,pwm1,pwm2,pwm3, real_pitch_angle, (curr_time-init_time)/1000.0); // Mojojojojo
+       printf("%d %d %d %d %f %f\r\n",pwm0,pwm1,pwm2,pwm3, real_pitch_angle, (curr_time-init_time)/1000.0); // Mojojojojo
 
       ///////////////////////////////////////////////////////////////////////////
      
@@ -249,12 +249,12 @@ int main (int argc, char *argv[])
 
 void pid_update(int desired_pitch, int desired_roll){
   // PID control values
-  float Kp = 4;
+  float Kp = 8;
   float Kd = 100;
   float Ki = 0.01;
-  float Kpr = 8;
-  float Kdr = 200;
-  float Kir = 0.02;
+  float Kpr = 0;//8;
+  float Kdr = 0;//200;
+  float Kir = 0;//0.02;
   // int neutral_power=1100; // replaced with global thrust
   float pitch_error = 0;
   float roll_error = 0;
@@ -306,15 +306,15 @@ void pid_update(int desired_pitch, int desired_roll){
   /////////////////////////////// MILESTONE ///////////////////////////////////
   //////// Uncomment this line by line to reach each milestone ////////////////
 
-  //pwm0 = quad_thrust + pitch_error*Kp - pitch_d_error*Kd + pitch_i_error*Ki;
-  //pwm1 = quad_thrust - pitch_error*Kp + pitch_d_error*Kd - pitch_i_error*Ki;
-  //pwm2 = quad_thrust + pitch_error*Kp - pitch_d_error*Kd + pitch_i_error*Ki;
-  //pwm3 = quad_thrust - pitch_error*Kp + pitch_d_error*Kd - pitch_i_error*Ki;
+  pwm0 = quad_thrust + pitch_error*Kp - pitch_d_error*Kd + pitch_i_error*Ki;
+  pwm1 = quad_thrust - pitch_error*Kp + pitch_d_error*Kd - pitch_i_error*Ki;
+  pwm2 = quad_thrust + pitch_error*Kp - pitch_d_error*Kd + pitch_i_error*Ki;
+  pwm3 = quad_thrust - pitch_error*Kp + pitch_d_error*Kd - pitch_i_error*Ki;
   //printf("P: %f, D: %f, I: %f",pitch_error*Kp,pitch_d_error*Kd,pitch_i_error*Ki);
-  pwm2 = quad_thrust + roll_error*Kpr - roll_d_error*Kdr + roll_i_error*Kir;
-  pwm3 = quad_thrust + roll_error*Kpr - roll_d_error*Kdr + roll_i_error*Kir;
-  pwm1 = quad_thrust - roll_error*Kpr + roll_d_error*Kdr - roll_i_error*Kir;
-  pwm0 = quad_thrust - roll_error*Kpr + roll_d_error*Kdr - roll_i_error*Kir;
+  // pwm2 = quad_thrust + roll_error*Kpr - roll_d_error*Kdr + roll_i_error*Kir;
+  // pwm3 = quad_thrust + roll_error*Kpr - roll_d_error*Kdr + roll_i_error*Kir;
+  // pwm1 = quad_thrust - roll_error*Kpr + roll_d_error*Kdr - roll_i_error*Kir;
+  // pwm0 = quad_thrust - roll_error*Kpr + roll_d_error*Kdr - roll_i_error*Kir;
 
   //////////////////////////// MILESTONE WEEK 4 ////////////////////////////////
   //  Might want to change the negative signs and positive signs in roll
@@ -384,8 +384,8 @@ void get_joystick(Keyboard keyboard){
       joy_roll = keyboard.roll; //  update roll // right is high
       joy_pitch = 20*(keyboard.pitch-128)/128; // update pitch // up is 16
       //printf("Thrust: %f, Yaw: %f, Roll,: %f, Pitch: %f",joy_thrust,joy_roll,joy_roll,joy_pitch);
-      quad_thrust= quad_base_thrust+ (int)joy_thrust; // update from base thrust.
-      printf("Quad_thrust: %d",quad_thrust, "Quad pitch: %f \r\n", joy_thrust,joy_pitch);
+      // quad_thrust= quad_base_thrust+ (int)joy_thrust; // update from base thrust.
+      // printf("Quad_thrust: %d Quad pitch: %f \r\n", joy_thrust,joy_pitch);
 
 
       

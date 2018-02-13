@@ -22,7 +22,7 @@
 #define PWR_MGMT_1       0x6B // Device defaults to the SLEEP mode
 #define PWR_MGMT_2       0x6C
 
-#define PWM_MAX 1000
+#define PWM_MAX 1800
 #define frequency 25000000.0
 #define LED0 0x6			
 #define LED0_ON_L 0x6		
@@ -211,7 +211,7 @@ int main (int argc, char *argv[])
 
       // This should be the only location that motor speed is varied. All other places should be zeroing the motor.
 
-      pid_update(0,0); // set desired pitch angle and roll angle
+      pid_update(joy_pitch,0); // set desired pitch angle and roll angle
 
 
       ////////////// MILESTONE WEEK 4 CHECK //////////////////
