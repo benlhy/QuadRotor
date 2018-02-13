@@ -444,11 +444,11 @@ void safety_check(){
     //stay_on = 0; //shinu
   }
   if (roll_angle>45 or roll_angle<-45){
-    //printf("Roll fail!");
+    //printf("Pitch fail!");
     //stay_on = 0; // shinu
   }
   if (pitch_angle>45 or pitch_angle<-45){
-    //printf("Pitch fail!");
+    //printf("Roll fail!");
     //stay_on = 0; // shinu
   }
   if (imu_data[0]>300 or imu_data[1]>300 or imu_data[2]>300){
@@ -661,7 +661,7 @@ void update_filter()
   time_prev=time_curr;
  //comp. filter for roll, pitch here: 
 
-  float confidence = 0.2;
+  float confidence = 0.008;
 
   // we already calculated the roll from the accelerometer data, so we take the global roll and combine it with that, and update the global roll
   
@@ -674,7 +674,7 @@ void update_filter()
 
   // I'm calling pitch roll and roll pitch. Wassup!
   real_pitch_angle = roll_angle;
-  real_roll_angle = -pitch_angle;
+  real_roll_angle = pitch_angle;
   
  
 
