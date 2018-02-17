@@ -22,7 +22,7 @@
 #define PWR_MGMT_1       0x6B // Device defaults to the SLEEP mode
 #define PWR_MGMT_2       0x6C
 
-#define PWM_MAX 1300
+#define PWM_MAX 1900
 #define frequency 25000000.0
 #define LED0 0x6			
 #define LED0_ON_L 0x6		
@@ -102,7 +102,7 @@ float yaw=0;
 float pitch_angle=0;
 float roll_angle=0;
 int pwm; // don't initialise! Used by something else
-int quad_thrust = 1200; // neutral speed
+int quad_thrust = 1500; // neutral speed
 int quad_base_thrust = quad_thrust;
 
 
@@ -177,7 +177,7 @@ int main (int argc, char *argv[])
     // getimeofday(&graphTimerS,NULL);
  
     //printf("Final_Roll, Acc_Roll, Gyro_roll, Final_Pitch, Acc_Pitch, Gyro_Ptich\n");
-    printf("PWM 0 , PWM 1, PWM 2, PWM 3, Current Pitch, Time\r\n");
+    printf("Time \t PWM 0 \t PWM 1 \t  PWM 2 \t PWM 3 \t Current Roll \t Quad Thrust \t Joy Pitch\r\n");
     gettimeofday(&myte,NULL);
     last_time = myte.tv_sec*1000LL+myte.tv_usec/1000; // first set the time to current time
     init_time = last_time;
@@ -211,7 +211,7 @@ int main (int argc, char *argv[])
 
       // This should be the only location that motor speed is varied. All other places should be zeroing the motor.
 
-      pid_update(0,0); // set desired pitch angle and roll angle
+      pid_update(joy_pitch,0); // set desired pitch angle and roll angle
 
 
       ////////////// MILESTONE WEEK 4 CHECK //////////////////
@@ -235,7 +235,11 @@ int main (int argc, char *argv[])
       // gettimeofday(&graphTimerE,NULL);
       // graphTime=(graphTimerE*1000LL+graphTimerE/1000)-(graphTimerS*1000LL+graphTimerS/1000);
 
-      printf("%d %d %d %d %f %f\r\n",pwm0,pwm1,pwm2,pwm3, real_pitch_angle, (curr_time-init_time)/1000.0); // Mojojojojo
+<<<<<<< HEAD
+       printf("%f \t %d \t %d \t %d \t %d \t %f \t %d \t %f\r\n",(curr_time-init_time)/1000.0, pwm0,pwm1,pwm2,pwm3, real_roll_angle,quad_thrust,joy_pitch); // Mojojojojo
+=======
+       printf("%d %d %d %d %f %f\r\n",pwm0,pwm1,pwm2,pwm3, real_pitch_angle, (curr_time-init_time)/1000.0); // Mojojojojo
+>>>>>>> origin/master
 
       ///////////////////////////////////////////////////////////////////////////
      
@@ -249,29 +253,44 @@ int main (int argc, char *argv[])
 
 void pid_update(int desired_pitch, int desired_roll){
   // PID control values
-  float Kp = 10;
-  float Kd = 150;
-  float Ki = 0.05;
-  int Kpr = 0;
-  int Kdr = 0;
-  int Kir = 0;
+<<<<<<< HEAD
+  float Kp = 7;
+  float Kd = 120;
+  float Ki = 0.003;
+  float Kpr = 6.5;//best: 6.5;//8;
+  float Kdr = 90;//best: 90;//200;
+  float Kir = 0.005;//best: 0.005;//0.02;
+=======
+  float Kp = 8;
+  float Kd = 100;
+  float Ki = 0.01;
+  float Kpr = 0;//8;
+  float Kdr = 0;//200;
+  float Kir = 0;//0.02;
+>>>>>>> origin/master
   // int neutral_power=1100; // replaced with global thrust
-  int pitch_error = 0;
-  int roll_error = 0;
-  int pitch_d_error, pitch_i_error;
-  int roll_d_error,roll_i_error;
+  float pitch_error = 0;
+  float roll_error = 0;
+  float pitch_d_error, pitch_i_error;
+  float roll_d_error,roll_i_error;
 
   
   // Errors
   pitch_error = desired_pitch - real_pitch_angle;
   pitch_d_error = prev_error - pitch_error;
-  pitch_i_error = pitch_integral_term + pitch_error;
+  //printf("D_error: %f",pitch_d_error);
+  pitch_integral_term = pitch_integral_term + pitch_error;
+  pitch_i_error = pitch_integral_term;
+  //printf("pitch: %f pitch error: %f pitch_i_error:%f \r\n",real_pitch_angle, pitch_error,pitch_i_error);
+  
   ///////////////////////////// MILESTONE for WEEK 4 /////////////////////////////
 
   // calculate but do nothing with them at the moment.
   roll_error = desired_roll - real_roll_angle;
   roll_d_error = prev_d_error - roll_error;
-  roll_i_error = roll_integral_term + roll_error;
+  roll_integral_term = roll_integral_term + roll_error;
+  roll_i_error = roll_integral_term;
+  //printf("roll: %f roll error: %f roll d error: %f roll_i_error: %f \r\n",real_roll_angle,roll_error, roll_d_error, roll_i_error);
   ///////////////////////////////////////////////////////////////////////////////
 
   //pitch_velocity_error = desired_pitch_velocity - imu_data[1]; //imudata[1] was originally roll, but roll is pitch
@@ -279,19 +298,19 @@ void pid_update(int desired_pitch, int desired_roll){
   //pitch_integral_term = pitch_integral_term+I*pitch_error; // Integrating over time
 
   // Ensure that integral doesn't get out of control.
-  if (pitch_i_error<-50){
-    pitch_i_error=-50;
+  if (pitch_i_error*Ki<-50){
+    pitch_i_error=-50/Ki;
   }
-  else if (pitch_i_error>100){
-    pitch_i_error = 100;
+  else if (pitch_i_error*Ki>100){
+    pitch_i_error = 100/Ki;
   }
   /////////////////////// MILESTONE for WEEK 4 ///////////////////////////
   
-  if (roll_i_error<-50){
-    pitch_i_error=-50;
+  if (roll_i_error*Kir<-50){
+    pitch_i_error=-50/Kir;
   }
-  else if (roll_i_error>100){
-    pitch_i_error = 100;
+  else if (roll_i_error*Kir>100){
+    pitch_i_error = 100/Kir;
   }
   
   /////////////////////////////////////////////////////////////////////
@@ -300,10 +319,22 @@ void pid_update(int desired_pitch, int desired_roll){
   /////////////////////////////// MILESTONE ///////////////////////////////////
   //////// Uncomment this line by line to reach each milestone ////////////////
 
-  pwm0 = quad_thrust + pitch_error*Kp + pitch_d_error*Kd + pitch_i_error*Ki;
-  pwm1 = quad_thrust - pitch_error*Kp - pitch_d_error*Kd - pitch_i_error*Ki;
-  pwm2 = quad_thrust + pitch_error*Kp + pitch_d_error*Kd + pitch_i_error*Ki;
-  pwm3 = quad_thrust - pitch_error*Kp - pitch_d_error*Kd - pitch_i_error*Ki;
+<<<<<<< HEAD
+  // pwm0 = quad_thrust + pitch_error*Kp - pitch_d_error*Kd + pitch_i_error*Ki;
+  // pwm1 = quad_thrust - pitch_error*Kp + pitch_d_error*Kd - pitch_i_error*Ki;
+  // pwm2 = quad_thrust + pitch_error*Kp - pitch_d_error*Kd + pitch_i_error*Ki;
+  // pwm3 = quad_thrust - pitch_error*Kp + pitch_d_error*Kd - pitch_i_error*Ki;
+=======
+  pwm0 = quad_thrust + pitch_error*Kp - pitch_d_error*Kd + pitch_i_error*Ki;
+  pwm1 = quad_thrust - pitch_error*Kp + pitch_d_error*Kd - pitch_i_error*Ki;
+  pwm2 = quad_thrust + pitch_error*Kp - pitch_d_error*Kd + pitch_i_error*Ki;
+  pwm3 = quad_thrust - pitch_error*Kp + pitch_d_error*Kd - pitch_i_error*Ki;
+>>>>>>> origin/master
+  //printf("P: %f, D: %f, I: %f",pitch_error*Kp,pitch_d_error*Kd,pitch_i_error*Ki);
+  // pwm2 = quad_thrust + roll_error*Kpr - roll_d_error*Kdr + roll_i_error*Kir;
+  // pwm3 = quad_thrust + roll_error*Kpr - roll_d_error*Kdr + roll_i_error*Kir;
+  // pwm1 = quad_thrust - roll_error*Kpr + roll_d_error*Kdr - roll_i_error*Kir;
+  // pwm0 = quad_thrust - roll_error*Kpr + roll_d_error*Kdr - roll_i_error*Kir;
 
   //////////////////////////// MILESTONE WEEK 4 ////////////////////////////////
   //  Might want to change the negative signs and positive signs in roll
@@ -341,8 +372,8 @@ int limit_speed(int thepwm){
   if (thepwm>PWM_MAX){
     return PWM_MAX;
   }
-  if (thepwm<1000){
-    return 1000;
+  if (thepwm<1100){
+    return 1100;
   }
   else{
     return thepwm;
@@ -371,10 +402,14 @@ void get_joystick(Keyboard keyboard){
       joy_thrust = keyboard.thrust; // update thrust // up is 16
       joy_yaw = keyboard.yaw; // update yaw // right is high
       joy_roll = keyboard.roll; //  update roll // right is high
-      joy_pitch = keyboard.pitch; // update pitch // up is 16
+      joy_pitch = 20*(keyboard.pitch-128)/128; // update pitch // up is 16
       //printf("Thrust: %f, Yaw: %f, Roll,: %f, Pitch: %f",joy_thrust,joy_roll,joy_roll,joy_pitch);
+<<<<<<< HEAD
       quad_thrust= quad_base_thrust+ (int)joy_thrust; // update from base thrust.
-      printf("Quad_thrust: %d",quad_thrust);
+=======
+      // quad_thrust= quad_base_thrust+ (int)joy_thrust; // update from base thrust.
+>>>>>>> origin/master
+      // printf("Quad_thrust: %d Quad pitch: %f \r\n", joy_thrust,joy_pitch);
 
 
       
@@ -425,23 +460,23 @@ void safety_check(){
   // CHECK convert to gs?
   int stay_on = 1;
   if (imu_data[3]>17.6 or imu_data[4]>17.6 or imu_data[5]>17.6){
-    printf("Impact!");
+    //printf("Impact!");
     //stay_on = 0; //shinu
   }
   if (imu_data[3]<2.45 and imu_data[4]<2.45 and imu_data[5]>2.45){
-    printf("Free fall!");
+    //printf("Free fall!");
     //stay_on = 0; //shinu
   }
   if (roll_angle>45 or roll_angle<-45){
-    printf("Roll fail!");
+    //printf("Pitch fail!");
     //stay_on = 0; // shinu
   }
   if (pitch_angle>45 or pitch_angle<-45){
-    printf("Pitch fail!");
+    //printf("Roll fail!");
     //stay_on = 0; // shinu
   }
   if (imu_data[0]>300 or imu_data[1]>300 or imu_data[2]>300){
-    printf("Spinning too fast!");
+    //printf("Spinning too fast!");
     stay_on = 0; 
   }
   //if(curr_time>last_time+250){
@@ -650,7 +685,7 @@ void update_filter()
   time_prev=time_curr;
  //comp. filter for roll, pitch here: 
 
-  float confidence = 0.2;
+  float confidence = 0.01;//0.00025;
 
   // we already calculated the roll from the accelerometer data, so we take the global roll and combine it with that, and update the global roll
   
@@ -663,7 +698,7 @@ void update_filter()
 
   // I'm calling pitch roll and roll pitch. Wassup!
   real_pitch_angle = roll_angle;
-  real_roll_angle = -pitch_angle;
+  real_roll_angle = pitch_angle;
   
  
 

@@ -22,7 +22,7 @@
 #define PWR_MGMT_1       0x6B // Device defaults to the SLEEP mode
 #define PWR_MGMT_2       0x6C
 
-#define PWM_MAX 1300
+#define PWM_MAX 1800
 #define frequency 25000000.0
 #define LED0 0x6			
 #define LED0_ON_L 0x6		
@@ -211,7 +211,7 @@ int main (int argc, char *argv[])
 
       // This should be the only location that motor speed is varied. All other places should be zeroing the motor.
 
-      pid_update(0,0); // set desired pitch angle and roll angle
+      pid_update(joy_pitch,0); // set desired pitch angle and roll angle
 
 
       ////////////// MILESTONE WEEK 4 CHECK //////////////////
@@ -235,7 +235,7 @@ int main (int argc, char *argv[])
       // gettimeofday(&graphTimerE,NULL);
       // graphTime=(graphTimerE*1000LL+graphTimerE/1000)-(graphTimerS*1000LL+graphTimerS/1000);
 
-      printf("%d %d %d %d %f %f\r\n",pwm0,pwm1,pwm2,pwm3, real_pitch_angle, (curr_time-init_time)/1000.0); // Mojojojojo
+      // printf("%d %d %d %d %f %f\r\n",pwm0,pwm1,pwm2,pwm3, real_pitch_angle, (curr_time-init_time)/1000.0); // Mojojojojo
 
       ///////////////////////////////////////////////////////////////////////////
      
@@ -371,10 +371,10 @@ void get_joystick(Keyboard keyboard){
       joy_thrust = keyboard.thrust; // update thrust // up is 16
       joy_yaw = keyboard.yaw; // update yaw // right is high
       joy_roll = keyboard.roll; //  update roll // right is high
-      joy_pitch = keyboard.pitch; // update pitch // up is 16
+      joy_pitch = 20.0*((keyboard.pitch-128.0)/128.0); // update pitch // up is 16
       //printf("Thrust: %f, Yaw: %f, Roll,: %f, Pitch: %f",joy_thrust,joy_roll,joy_roll,joy_pitch);
       quad_thrust= quad_base_thrust+ (int)joy_thrust; // update from base thrust.
-      printf("Quad_thrust: %d",quad_thrust);
+      printf("Quad_thrust: %d Quad pitch: %f \r\n", quad_thrust,joy_pitch);
 
 
       
@@ -425,23 +425,23 @@ void safety_check(){
   // CHECK convert to gs?
   int stay_on = 1;
   if (imu_data[3]>17.6 or imu_data[4]>17.6 or imu_data[5]>17.6){
-    printf("Impact!");
+    //printf("Impact!");
     //stay_on = 0; //shinu
   }
   if (imu_data[3]<2.45 and imu_data[4]<2.45 and imu_data[5]>2.45){
-    printf("Free fall!");
+    //printf("Free fall!");
     //stay_on = 0; //shinu
   }
   if (roll_angle>45 or roll_angle<-45){
-    printf("Roll fail!");
+    //printf("Roll fail!");
     //stay_on = 0; // shinu
   }
   if (pitch_angle>45 or pitch_angle<-45){
-    printf("Pitch fail!");
+    //printf("Pitch fail!");
     //stay_on = 0; // shinu
   }
   if (imu_data[0]>300 or imu_data[1]>300 or imu_data[2]>300){
-    printf("Spinning too fast!");
+    //printf("Spinning too fast!");
     stay_on = 0; 
   }
   //if(curr_time>last_time+250){
