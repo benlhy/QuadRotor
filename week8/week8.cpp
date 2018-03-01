@@ -23,7 +23,7 @@
 #define PWR_MGMT_1       0x6B // Device defaults to the SLEEP mode
 #define PWR_MGMT_2       0x6C
 
-#define PWM_MAX 1900
+#define PWM_MAX 1000
 #define frequency 25000000.0
 #define LED0 0x6      
 #define LED0_ON_L 0x6   
@@ -89,6 +89,9 @@ void get_update();
 // MILESTONE for WEEK 4//
 void get_joystick(Keyboard keyboard);
 
+// MILESTONE FOR WEEK 8
+void vive_update(int curr_time_vive);
+
 //global variables
 int imu;
 float x_gyro_calibration=0;
@@ -145,6 +148,9 @@ int prev_d_error = 0;
 float prev_pitch=0;
 float prev_roll=0;
 
+//vive
+float prev_time_vive = 0;
+
 int pwm0 = 1100;
 int pwm1 = 1100;
 int pwm2 = 1100;
@@ -189,6 +195,7 @@ int main (int argc, char *argv[])
     gettimeofday(&myte,NULL);
     last_time = myte.tv_sec*1000LL+myte.tv_usec/1000; // first set the time to current time
     init_time = last_time;
+    init_time = prev_time_vive;
     while(run_program==1)
     {
       local_p=*position; 
@@ -219,7 +226,7 @@ int main (int argc, char *argv[])
       safety_check();
 
       // This should be the only location that motor speed is varied. All other places should be zeroing the motor.
-
+      vive_update(curr_time);
       pid_update(joy_pitch,joy_roll,joy_yaw); // set desired pitch angle and roll angle
 
       ////////////// MILESTONE WEEK 4 CHECK //////////////////
@@ -254,6 +261,25 @@ int main (int argc, char *argv[])
       
    return 0;
   
+}
+
+void vive_update(int curr_time_vive){
+	if(local_p.version != last_vive_version){
+		printf("ViveX:%f ViveY:%f ViveZ:%f ViveYaw:%f",local_p.x,local_p.y,local_p.z,local_p.yaw);
+	}
+	else {
+		// check time
+		float time_diff = curr_time_vive-prev_time_vive;
+		if (time_diff>0.5){
+			run_program = 0;
+		}
+		else {
+			prev_time_vive = curr_time_vive;
+		}
+
+
+	}
+
 }
 
 void pid_update(float desired_pitch, float desired_roll,float desired_yaw){
