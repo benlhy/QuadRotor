@@ -152,6 +152,7 @@ float prev_roll=0;
 float prev_time_vive = 0;
 float ref_time = 0;
 int last_vive_version=0;
+float desired_yaw_rate = 0;
 
 int pwm0 = 1100;
 int pwm1 = 1100;
@@ -229,9 +230,10 @@ int main (int argc, char *argv[])
       safety_check();
 
       // This should be the only location that motor speed is varied. All other places should be zeroing the motor.
-      vive_update(ref_time,0,0,0);
+      // time, posx,posy,posz,posvive
+      vive_update(ref_time,0,0,0,0);
       //printf("%f",(curr_time-init_time)/1000.0); 
-      pid_update(joy_pitch,joy_roll,joy_yaw); // set desired pitch angle and roll angle
+      pid_update(joy_pitch,joy_roll,desired_yaw_rate); // set desired pitch angle and roll angle
 
       ////////////// MILESTONE WEEK 4 CHECK //////////////////
       // pid_update(joy_pitch); // This is our desired pitch
@@ -267,7 +269,8 @@ int main (int argc, char *argv[])
   
 }
 
-void vive_update(float curr_time_vive,float desired_x_pos,float desired_y_pos,float desired_z_pos){
+void vive_update(float curr_time_vive,float desired_x_pos,float desired_y_pos,float desired_z_pos,float desired_yaw_pos){
+  int Kpvive = 150;
   //printf("%f %f \r\n",curr_time_vive,prev_time_vive);
   printf("Time:%f ViveX:%f ViveY:%f ViveZ:%f ViveYaw:%f ViveVersion:%d \r\n",curr_time_vive,local_p.x,local_p.y,local_p.z,local_p.yaw,local_p.version);
 	if(local_p.version != last_vive_version){
@@ -280,6 +283,10 @@ void vive_update(float curr_time_vive,float desired_x_pos,float desired_y_pos,fl
     // if((local_p.z-desired_z_pos>1000|| (local_p.z-desired_z_pos<-1000))){
     //   run_program = 0;
     // }
+    else {
+      // okay, we got an update and everything is still within limits
+      desired_yaw_rate = Kpvive*(local_p.yaw - desired_yaw_pos); // set global yaw
+    }
 
 
 		//printf("Time:%f ViveX:%f ViveY:%f ViveZ:%f ViveYaw:%f",curr_time_vive,local_p.x,local_p.y,local_p.z,local_p.yaw);
