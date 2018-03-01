@@ -69,6 +69,8 @@ struct Keyboard {
 
 Keyboard* shared_memory; 
 
+Position local_p; //global struct for position
+
 // Prototypes goes here
 int setup_imu();
 void setup_keyboard();
@@ -162,6 +164,7 @@ int main (int argc, char *argv[])
 {
     
 
+    init_shared_memory(); //vive initiate
     setup_imu();
     calibrate_imu();
     //in main before while(1) loop add...
@@ -188,6 +191,7 @@ int main (int argc, char *argv[])
     init_time = last_time;
     while(run_program==1)
     {
+      local_p=*position; 
       gettimeofday(&myte,NULL); // get time of day
       curr_time = myte.tv_sec*1000LL+myte.tv_usec/1000; // update current time.
       
