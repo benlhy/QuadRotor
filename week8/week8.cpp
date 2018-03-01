@@ -9,7 +9,7 @@
 #include <sys/shm.h>
 #include <sys/stat.h>
 #include <curses.h>
-#include <vive.h>
+#include "vive.h"
 
 //gcc -o week1 week_1.cpp -lwiringPi -lncurses -lm
 
@@ -90,7 +90,7 @@ void get_update();
 void get_joystick(Keyboard keyboard);
 
 // MILESTONE FOR WEEK 8
-void vive_update(int curr_time_vive);
+void vive_update(float curr_time_vive, float desired_x_pos,float desired_y_pos,float desired_z_pos);
 
 //global variables
 int imu;
@@ -150,6 +150,8 @@ float prev_roll=0;
 
 //vive
 float prev_time_vive = 0;
+float ref_time = 0;
+int last_vive_version=0;
 
 int pwm0 = 1100;
 int pwm1 = 1100;
@@ -195,12 +197,13 @@ int main (int argc, char *argv[])
     gettimeofday(&myte,NULL);
     last_time = myte.tv_sec*1000LL+myte.tv_usec/1000; // first set the time to current time
     init_time = last_time;
-    init_time = prev_time_vive;
+    //prev_time_vive = last_time/1000.0;
     while(run_program==1)
     {
       local_p=*position; 
       gettimeofday(&myte,NULL); // get time of day
       curr_time = myte.tv_sec*1000LL+myte.tv_usec/1000; // update current time.
+      ref_time = (curr_time-init_time)/1000.0;
       
 
 
@@ -226,7 +229,8 @@ int main (int argc, char *argv[])
       safety_check();
 
       // This should be the only location that motor speed is varied. All other places should be zeroing the motor.
-      vive_update(curr_time);
+      vive_update(ref_time,0,0,0);
+      //printf("%f",(curr_time-init_time)/1000.0); 
       pid_update(joy_pitch,joy_roll,joy_yaw); // set desired pitch angle and roll angle
 
       ////////////// MILESTONE WEEK 4 CHECK //////////////////
@@ -263,22 +267,40 @@ int main (int argc, char *argv[])
   
 }
 
-void vive_update(int curr_time_vive){
+void vive_update(float curr_time_vive,float desired_x_pos,float desired_y_pos,float desired_z_pos){
+  //printf("%f %f \r\n",curr_time_vive,prev_time_vive);
+  printf("Time:%f ViveX:%f ViveY:%f ViveZ:%f ViveYaw:%f ViveVersion:%d \r\n",curr_time_vive,local_p.x,local_p.y,local_p.z,local_p.yaw,local_p.version);
 	if(local_p.version != last_vive_version){
-		printf("ViveX:%f ViveY:%f ViveZ:%f ViveYaw:%f",local_p.x,local_p.y,local_p.z,local_p.yaw);
+    if((local_p.x-desired_x_pos>1000|| (local_p.x-desired_x_pos<-1000))){
+      run_program = 0;
+    }
+    if((local_p.y-desired_y_pos>1000|| (local_p.y-desired_y_pos<-1000))){
+      run_program = 0;
+    }
+    // if((local_p.z-desired_z_pos>1000|| (local_p.z-desired_z_pos<-1000))){
+    //   run_program = 0;
+    // }
+
+
+		//printf("Time:%f ViveX:%f ViveY:%f ViveZ:%f ViveYaw:%f",curr_time_vive,local_p.x,local_p.y,local_p.z,local_p.yaw);
+    last_vive_version = local_p.version;
+    prev_time_vive = curr_time_vive;
 	}
 	else {
 		// check time
 		float time_diff = curr_time_vive-prev_time_vive;
 		if (time_diff>0.5){
-			run_program = 0;
+      printf("No Vive Connection\r\n");
+			run_program = 0; 
 		}
 		else {
-			prev_time_vive = curr_time_vive;
+			//prev_time_vive = curr_time_vive;
 		}
 
 
 	}
+  //printf("Entered vive!");
+
 
 }
 
@@ -380,7 +402,7 @@ void pid_update(float desired_pitch, float desired_roll,float desired_yaw){
   //pwm2 = quad_thrust + yaw_error*Kpy;
   //pwm3 = quad_thrust - yaw_error*Kpy;
 
-  printf("%f \t %f \t %d \t %d \t %d \t %d\r\n",desired_yaw, real_yaw_angle,pwm0,pwm1,pwm2,pwm3);
+  //printf("%f \t %f \t %d \t %d \t %d \t %d\r\n",desired_yaw, real_yaw_angle,pwm0,pwm1,pwm2,pwm3);
 
   
 
