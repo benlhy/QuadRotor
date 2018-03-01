@@ -233,6 +233,7 @@ int main (int argc, char *argv[])
       // time, posx,posy,posz,posvive
       vive_update(ref_time,0,0,0,0);
       //printf("%f",(curr_time-init_time)/1000.0); 
+      printf("Desired yaw rate: %f \r\n",desired_yaw_rate);
       pid_update(joy_pitch,joy_roll,desired_yaw_rate); // set desired pitch angle and roll angle
 
       ////////////// MILESTONE WEEK 4 CHECK //////////////////
@@ -409,7 +410,7 @@ void pid_update(float desired_pitch, float desired_roll,float desired_yaw){
   //pwm2 = quad_thrust + yaw_error*Kpy;
   //pwm3 = quad_thrust - yaw_error*Kpy;
 
-  //printf("%f \t %f \t %d \t %d \t %d \t %d\r\n",desired_yaw, real_yaw_angle,pwm0,pwm1,pwm2,pwm3);
+  printf("%f \t %f \t %d \t %d \t %d \t %d\r\n",desired_yaw, real_yaw_angle,pwm0,pwm1,pwm2,pwm3);
 
   
 
